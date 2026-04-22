@@ -2,37 +2,37 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
+from gtts import gTTS
+import base64
+from io import BytesIO
 
-st.set_page_config(page_title="Jitendra AI Trading", layout="wide")
-st.title("📈 Jitendra Singh's AI Trading Agent")
+st.set_page_config(page_title="Jitendra AI Voice Agent", layout="wide")
+st.title("🎙️ Jitendra's AI Voice Agent")
 
-symbol = st.sidebar.text_input("Enter Symbol (e.g. RELIANCE.NS)", value="RELIANCE.NS")
+# आवाज़ निकालने वाला फंक्शन
+def say_something(text):
+    tts = gTTS(text=text, lang='hi') # हिंदी भाषा
+    fp = BytesIO()
+    tts.write_to_fp(fp)
+    return fp
+
+symbol = st.sidebar.text_input("शेयर का नाम लिखें", value="RELIANCE.NS")
 
 if symbol:
-    try:
-        # डेटा को साफ़ तरीके से डाउनलोड करना
-        data = yf.download(symbol, period="5d", interval="15m", group_by='column')
+    data = yf.download(symbol, period="1d", interval="15m")
+    if not data.empty:
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+            
+        last_price = float(data['Close'].iloc[-1])
+        st.metric(label=f"Current Price: {symbol}", value=f"₹{last_price:.2f}")
         
-        if not data.empty:
-            # डेटा को सरल (Flatten) बनाना ताकि एरर न आए
-            if isinstance(data.columns, pd.MultiIndex):
-                data.columns = data.columns.get_level_values(0)
+        # आवाज़ का बटन
+        msg = f"जितेंद्र, {symbol} की ताज़ा कीमत {last_price:.2f} रुपए है।"
+        if st.button("आवाज़ में सुनें 🔊"):
+            sound_fp = say_something(msg)
+            st.audio(sound_fp, format='audio/mp3')
             
-            # आखिरी क्लोजिंग प्राइस निकालना
-            last_price = float(data['Close'].iloc[-1])
-            st.metric(label=f"Current Price: {symbol}", value=f"₹{last_price:.2f}")
-            
-            # कैंडलस्टिक चार्ट
-            fig = go.Figure(data=[go.Candlestick(
-                x=data.index,
-                open=data['Open'], high=data['High'],
-                low=data['Low'], close=data['Close']
-            )])
-            
-            fig.update_layout(xaxis_rangeslider_visible=False, title=f"Live Performance: {symbol}")
-            st.plotly_chart(fig, use_container_width=True)
-            st.success("बाज़ार का डेटा सफलतापूर्वक लोड हो गया है!")
-        else:
-            st.warning("डेटा नहीं मिला। कृपया सिंबल चेक करें।")
-    except Exception as e:
-        st.error(f"Error: {e}")
+        # चार्ट
+        fig = go.Figure(data=[go.Candlestick(x=data.index, open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'])])
+        st.plotly_chart(fig, use_container_width=True)
