@@ -3,3 +3,4 @@ yfinance
 plotly
 gTTS
 google-generativeai
+requests
