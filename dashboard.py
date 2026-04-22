@@ -4,64 +4,11 @@ import pandas as pd
 import requests
 import time
 
-st.set_page_config(page_title="Jitendra AI Avatar", layout="wide")
+st.set_page_config(page_title="Jitendra Singh AI", layout="wide")
 
-# अपनी API Key यहाँ डालें
-DID_API_KEY = "# API Keys
-
-
-
-Get your API key from the Studio in four steps
-
-
-
-Get your API key from the [Studio](https://studio.d-id.com). Use it to authenticate all API requests.
-
-
-
-<CoolSteps name="generate-api-key">
-
-  <CoolStep number={1} title="Log into the Studio">
-
-    Sign in at [studio.d-id.com](https://studio.d-id.com).
-
-  </CoolStep>
-
-
-
-  <CoolStep number={2} title="Go to Account settings">
-
-    Open [Account settings](https://studio.d-id.com/account-settings).
-
-  </CoolStep>
-
-
-
-  <CoolStep number={3} title="Generate API key and store securely">
-
-    Click Generate API key. The key (format: `API_USER:API_PASSWORD`) is shown only once - copy it and save it in a secure place.
-
-  </CoolStep>
-
-
-
-  <CoolStep number={4} title="Use your key in requests">
-
-    Send your key in the `Authorization` header as `Basic API_USER:API_PASSWORD` with every API request.
-
-
-
-    ```yaml Request
-
-    curl -X GET "https://api.d-id.com/agents" \
-
-      -H "Authorization: Basic <YOUR KEY>"
-
-    ```
-
-  </CoolStep>
-
-</CoolSteps>"
+# अपनी API Key यहाँ डालें (Basic के बाद अपनी चाबी पेस्ट करें)
+# उदाहरण: "Basic Y29tYXBpZGV2ZWxvcGVyQGdtYWlsLmNvbTpkZklkZ..."
+DID_API_KEY = "यहाँ_अपनी_पूरी_Key_पेस्ट_करें"
 
 def create_ai_video(text):
     url = "https://api.d-id.com/talks"
@@ -72,15 +19,11 @@ def create_ai_video(text):
     payload = {
         "script": {
             "type": "text",
-            "subtitles": "false",
             "provider": {"type": "microsoft", "voice_id": "hi-IN-SwaraNeural"},
-            "ssml": "false",
             "input": text
         },
-        "config": {"fluent": "false", "pad_audio": "0.0"},
-        "source_url": "https://create-images-results.d-id.com/api_docs/woman.jpg" # आप यहाँ अपनी फोटो का लिंक भी डाल सकते हैं
+        "source_url": "https://create-images-results.d-id.com/api_docs/woman.jpg"
     }
-    
     res = requests.post(url, json=payload, headers=headers)
     return res.json().get("id")
 
@@ -88,35 +31,38 @@ def get_video_url(talk_id):
     url = f"https://api.d-id.com/talks/{talk_id}"
     headers = {"Authorization": f"Basic {DID_API_KEY}"}
     
-    # वीडियो बनने में कुछ सेकंड लगते हैं
-    for _ in range(10):
+    # वीडियो बनने में थोड़ा समय लगता है (बाड़मेर के धैर्य की परीक्षा!)
+    for _ in range(15):
         res = requests.get(url, headers=headers).json()
         if res.get("result_url"):
             return res.get("result_url")
-        time.sleep(2)
+        time.sleep(3)
     return None
 
-st.title("🚀 Jitendra Singh's Interactive AI Agent")
+st.title("🎙️ Jitendra Singh's Digital AI Agent")
 
-if st.sidebar.button("Morning Briefing (Avatar) 🎙️"):
-    with st.spinner("आपका AI अवतार तैयार हो रहा है..."):
-        # मार्केट का डेटा लेना
-        nifty = yf.download("^NSEI", period="1d")
-        price = float(nifty['Close'].iloc[-1])
-        msg = f"नमस्ते जीतेन्द्र बॉस! मार्केट खुल चुका है। निफ्टी अभी {price:.2f} पर है। आज का दिन आपके लिए शुभ हो।"
-        
-        # वीडियो बनाना
-        talk_id = create_ai_video(msg)
-        video_url = get_video_url(talk_id)
-        
-        if video_url:
-            st.video(video_url)
-            st.success("लीजिए बॉस, आपकी रिपोर्ट तैयार है!")
-        else:
-            st.error("वीडियो बनाने में थोड़ी देरी हो रही है, कृपया दोबारा कोशिश करें।")
+# मॉर्निंग ब्रीफिंग बटन
+if st.sidebar.button("बात करें (AI Avatar) 🎙️"):
+    with st.spinner("आपका डिजिटल एजेंट तैयार हो रहा है..."):
+        # निफ्टी का डेटा लेना
+        nifty = yf.download("^NSEI", period="1d", interval="1m")
+        if not nifty.empty:
+            price = float(nifty['Close'].iloc[-1])
+            msg = f"नमस्ते जीतेन्द्र सर! मार्केट खुल गया है। निफ्टी अभी {price:.2f} पर चल रहा है। आज का दिन आपके लिए मंगलमय हो।"
+            
+            talk_id = create_ai_video(msg)
+            video_url = get_video_url(talk_id)
+            
+            if video_url:
+                st.video(video_url)
+                st.success("लीजिए बॉस, आपकी रिपोर्ट!")
+            else:
+                st.error("वीडियो प्रोसेस होने में समय लग रहा है, कृपया एक बार फिर बटन दबाएँ।")
 
-# पुराना चार्ट वाला हिस्सा नीचे रहेगा
-symbol = st.sidebar.text_input("Stock Symbol", value="RELIANCE.NS")
+# चार्ट वाला हिस्सा
+symbol = st.sidebar.text_input("शेयर चुनें", value="RELIANCE.NS")
 if symbol:
     data = yf.download(symbol, period="5d")
-    st.line_chart(data['Close'])
+    if not data.empty:
+        st.subheader(f"{symbol} का 5 दिनों का चार्ट")
+        st.line_chart(data['Close'])
