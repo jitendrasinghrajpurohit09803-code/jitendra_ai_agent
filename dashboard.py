@@ -3,20 +3,25 @@ import yfinance as yf
 import pandas as pd
 import requests
 import time
+import base64
 
 st.set_page_config(page_title="Jitendra AI Avatar", layout="wide")
 
-# यहाँ अपनी API Key डालें
-DID_API_KEY = "# API Keys
+# 1. यहाँ अपनी पूरी API Key डालें (जैसे: "abc123xyz:789qwe")
+RAW_KEY = "# API Keys
+
 Get your API key from the Studio in four steps
+
 Get your API key from the [Studio](https://studio.d-id.com). Use it to authenticate all API requests.
+
 <CoolSteps name="generate-api-key">
   <CoolStep number={1} title="Log into the Studio">
     Sign in at [studio.d-id.com](https://studio.d-id.com).
   </CoolStep>
+
   <CoolStep number={2} title="Go to Account settings">
     Open [Account settings](https://studio.d-id.com/account-settings).
-  </CoolStep>"
+  </CoolStep>
 
   <CoolStep number={3} title="Generate API key and store securely">
     Click Generate API key. The key (format: `API_USER:API_PASSWORD`) is shown only once - copy it and save it in a secure place.
@@ -32,10 +37,17 @@ Get your API key from the [Studio](https://studio.d-id.com). Use it to authentic
   </CoolStep>
 </CoolSteps>"
 
+# कोडिंग के लिए चाबी को तैयार करना (Encoding)
+def get_auth_header(key):
+    encoded_key = base64.b64encode(key.encode()).decode()
+    return f"Basic {encoded_key}"
+
+AUTH_HEADER = get_auth_header(RAW_KEY)
+
 def create_ai_video(text):
     url = "https://api.d-id.com/talks"
     headers = {
-        "Authorization": f"Basic {DID_API_KEY}",
+        "Authorization": AUTH_HEADER,
         "Content-Type": "application/json"
     }
     payload = {
@@ -51,7 +63,7 @@ def create_ai_video(text):
 
 def get_video_url(talk_id):
     url = f"https://api.d-id.com/talks/{talk_id}"
-    headers = {"Authorization": f"Basic {DID_API_KEY}"}
+    headers = {"Authorization": AUTH_HEADER}
     for _ in range(15):
         res = requests.get(url, headers=headers).json()
         if res.get("result_url"):
@@ -63,24 +75,24 @@ st.title("🎙️ Jitendra Singh's Digital AI Agent")
 
 if st.sidebar.button("Morning Briefing (Avatar) 🎙️"):
     with st.spinner("बॉस, आपका AI अवतार तैयार हो रहा है..."):
-        # मार्केट डेटा (सुरक्षित तरीका)
         nifty = yf.download("^NSEI", period="1d")
         if not nifty.empty:
-            # डेटा को सीधा नंबर में बदलना
             last_val = nifty['Close'].values[-1]
-            if isinstance(last_val, (list, pd.Series, pd.Index)):
-                last_val = last_val[0]
+            # अगर डेटा लिस्ट में है तो उसे साफ़ करें
+            if hasattr(last_val, "__len__"): last_val = last_val[0]
             
             msg = f"नमस्ते जीतेन्द्र बॉस! मार्केट खुल चुका है। निफ्टी अभी {float(last_val):.2f} पर है। आज का दिन आपके लिए मंगलमय हो।"
             
             talk_id = create_ai_video(msg)
-            video_url = get_video_url(talk_id)
-            
-            if video_url:
-                st.video(video_url)
-                st.success("रिपोर्ट तैयार है, बॉस!")
+            if talk_id:
+                video_url = get_video_url(talk_id)
+                if video_url:
+                    st.video(video_url)
+                    st.success("रिपोर्ट तैयार है, बॉस!")
+                else:
+                    st.error("वीडियो प्रोसेस होने में समय लग रहा है।")
             else:
-                st.error("वीडियो बनाने में समय लग रहा है, कृपया दोबारा दबाएँ।")
+                st.error("API Key चेक करें, कनेक्शन नहीं हो पा रहा है।")
 
 # चार्ट वाला हिस्सा
 symbol = st.sidebar.text_input("Stock Symbol", value="RELIANCE.NS")
