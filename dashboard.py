@@ -7,7 +7,36 @@ import time
 st.set_page_config(page_title="Jitendra AI Avatar", layout="wide")
 
 # यहाँ अपनी API Key डालें
-DID_API_KEY = "अपनी_Key_यहाँ_पेस्ट_करें"
+DID_API_KEY = "
+
+# API Keys
+
+Get your API key from the Studio in four steps
+
+Get your API key from the [Studio](https://studio.d-id.com). Use it to authenticate all API requests.
+
+<CoolSteps name="generate-api-key">
+  <CoolStep number={1} title="Log into the Studio">
+    Sign in at [studio.d-id.com](https://studio.d-id.com).
+  </CoolStep>
+
+  <CoolStep number={2} title="Go to Account settings">
+    Open [Account settings](https://studio.d-id.com/account-settings).
+  </CoolStep>
+
+  <CoolStep number={3} title="Generate API key and store securely">
+    Click Generate API key. The key (format: `API_USER:API_PASSWORD`) is shown only once - copy it and save it in a secure place.
+  </CoolStep>
+
+  <CoolStep number={4} title="Use your key in requests">
+    Send your key in the `Authorization` header as `Basic API_USER:API_PASSWORD` with every API request.
+
+    ```yaml Request
+    curl -X GET "https://api.d-id.com/agents" \
+      -H "Authorization: Basic <YOUR KEY>"
+    ```
+  </CoolStep>
+</CoolSteps>"
 
 def create_ai_video(text):
     url = "https://api.d-id.com/talks"
