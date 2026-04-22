@@ -1,50 +1,122 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import plotly.graph_objects as go
-from gtts import gTTS
-from io import BytesIO
+import requests
+import time
 
-st.set_page_config(page_title="Jitendra AI Jarvis", layout="wide")
-st.title("🎙️ Jitendra Singh's AI Jarvis")
+st.set_page_config(page_title="Jitendra AI Avatar", layout="wide")
 
-# आवाज़ पैदा करने वाला फंक्शन
-def speak(text):
-    tts = gTTS(text=text, lang='hi')
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    return fp
+# अपनी API Key यहाँ डालें
+DID_API_KEY = "# API Keys
 
-# मॉर्निंग ब्रीफिंग फंक्शन (एरर फ्री)
-def get_morning_briefing():
-    nifty = yf.download("^NSEI", period="1d", interval="1m")
-    if not nifty.empty:
-        # डेटा को साफ़ तरीके से निकालना
-        if isinstance(nifty.columns, pd.MultiIndex):
-            nifty.columns = nifty.columns.get_level_values(0)
-        
-        current_val = float(nifty['Close'].iloc[-1])
-        report = f"सुप्रभात बॉस! मार्केट खुल चुका है। निफ्टी अभी {current_val:.2f} पर ट्रेड कर रहा है। आज सावधानी से काम करें।"
-        return report, current_val
-    return "बॉस, अभी डेटा नहीं मिल पा रहा है।", 0
 
-# साइडबार में बटन
-if st.sidebar.button("Morning Briefing 🎙️"):
-    text_report, val = get_morning_briefing()
-    st.subheader("आज की रिपोर्ट:")
-    st.write(text_report)
+
+Get your API key from the Studio in four steps
+
+
+
+Get your API key from the [Studio](https://studio.d-id.com). Use it to authenticate all API requests.
+
+
+
+<CoolSteps name="generate-api-key">
+
+  <CoolStep number={1} title="Log into the Studio">
+
+    Sign in at [studio.d-id.com](https://studio.d-id.com).
+
+  </CoolStep>
+
+
+
+  <CoolStep number={2} title="Go to Account settings">
+
+    Open [Account settings](https://studio.d-id.com/account-settings).
+
+  </CoolStep>
+
+
+
+  <CoolStep number={3} title="Generate API key and store securely">
+
+    Click Generate API key. The key (format: `API_USER:API_PASSWORD`) is shown only once - copy it and save it in a secure place.
+
+  </CoolStep>
+
+
+
+  <CoolStep number={4} title="Use your key in requests">
+
+    Send your key in the `Authorization` header as `Basic API_USER:API_PASSWORD` with every API request.
+
+
+
+    ```yaml Request
+
+    curl -X GET "https://api.d-id.com/agents" \
+
+      -H "Authorization: Basic <YOUR KEY>"
+
+    ```
+
+  </CoolStep>
+
+</CoolSteps>"
+
+def create_ai_video(text):
+    url = "https://api.d-id.com/talks"
+    headers = {
+        "Authorization": f"Basic {DID_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "script": {
+            "type": "text",
+            "subtitles": "false",
+            "provider": {"type": "microsoft", "voice_id": "hi-IN-SwaraNeural"},
+            "ssml": "false",
+            "input": text
+        },
+        "config": {"fluent": "false", "pad_audio": "0.0"},
+        "source_url": "https://create-images-results.d-id.com/api_docs/woman.jpg" # आप यहाँ अपनी फोटो का लिंक भी डाल सकते हैं
+    }
     
-    # आवाज़ सुनाना
-    audio_fp = speak(text_report)
-    st.audio(audio_fp, format='audio/mp3')
+    res = requests.post(url, json=payload, headers=headers)
+    return res.json().get("id")
 
-# सामान्य चार्ट कोड
-symbol = st.sidebar.text_input("Enter Symbol", value="RELIANCE.NS")
+def get_video_url(talk_id):
+    url = f"https://api.d-id.com/talks/{talk_id}"
+    headers = {"Authorization": f"Basic {DID_API_KEY}"}
+    
+    # वीडियो बनने में कुछ सेकंड लगते हैं
+    for _ in range(10):
+        res = requests.get(url, headers=headers).json()
+        if res.get("result_url"):
+            return res.get("result_url")
+        time.sleep(2)
+    return None
+
+st.title("🚀 Jitendra Singh's Interactive AI Agent")
+
+if st.sidebar.button("Morning Briefing (Avatar) 🎙️"):
+    with st.spinner("आपका AI अवतार तैयार हो रहा है..."):
+        # मार्केट का डेटा लेना
+        nifty = yf.download("^NSEI", period="1d")
+        price = float(nifty['Close'].iloc[-1])
+        msg = f"नमस्ते जीतेन्द्र बॉस! मार्केट खुल चुका है। निफ्टी अभी {price:.2f} पर है। आज का दिन आपके लिए शुभ हो।"
+        
+        # वीडियो बनाना
+        talk_id = create_ai_video(msg)
+        video_url = get_video_url(talk_id)
+        
+        if video_url:
+            st.video(video_url)
+            st.success("लीजिए बॉस, आपकी रिपोर्ट तैयार है!")
+        else:
+            st.error("वीडियो बनाने में थोड़ी देरी हो रही है, कृपया दोबारा कोशिश करें।")
+
+# पुराना चार्ट वाला हिस्सा नीचे रहेगा
+symbol = st.sidebar.text_input("Stock Symbol", value="RELIANCE.NS")
 if symbol:
-    data = yf.download(symbol, period="5d", interval="15m")
-    if not data.empty:
-        if isinstance(data.columns, pd.MultiIndex):
-            data.columns = data.columns.get_level_values(0)
-        st.metric(label=f"Price: {symbol}", value=f"₹{float(data['Close'].iloc[-1]):.2f}")
-        fig = go.Figure(data=[go.Candlestick(x=data.index, open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'])])
-        st.plotly_chart(fig, use_container_width=True)
+    data = yf.download(symbol, period="5d")
+    st.line_chart(data['Close'])
