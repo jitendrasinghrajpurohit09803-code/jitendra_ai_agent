@@ -7,7 +7,7 @@ import time
 st.set_page_config(page_title="Jitendra AI Agent", layout="wide")
 
 # यहाँ अपनी कॉपी की हुई चाबी को " " के बीच पेस्ट करें
-DID_API_KEY = "Q1BAYR9KDq9ANJBL"
+DID_API_KEY = "Basic Q1BAYR9KDq9ANJBL"
 
 def create_ai_video(text):
     url = "https://api.d-id.com/talks"
