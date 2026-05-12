@@ -8,7 +8,7 @@ import base64
 st.set_page_config(page_title="Jitendra AI Avatar", layout="wide")
 
 # 1. यहाँ अपनी पूरी API Key डालें (जैसे: "abc123xyz:789qwe")
-RAW_KEY = "# API Keys
+RAW_KEY = "aml0ZW5kcmFzaW5naHJhanB1cm9oaXQwOTgwM0BnbWFpbC5jb20:qWC9yQ1BAYR9KDq9ANJBL"
 
 Get your API key from the Studio in four steps
 
