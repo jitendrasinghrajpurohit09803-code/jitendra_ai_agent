@@ -3,5 +3,4 @@ yfinance
 google-generativeai
 Pillow
 requests
-streamlit-vapi
 pandas
