@@ -1,6 +1,7 @@
 streamlit
 yfinance
-plotly
-gTTS
 google-generativeai
+Pillow
 requests
+streamlit-vapi
+pandas
