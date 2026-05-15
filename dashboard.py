@@ -1,17 +1,28 @@
 import streamlit as st
 import yfinance as yf
-import pandas as pd
+import google.generativeai as genai
+from PIL import Image
 import requests
 import time
+from streamlit_vapi import vapi
 
-st.set_page_config(page_title="Jitendra AI Agent", layout="wide")
+# --- 1. अपनी सभी API Keys यहाँ भरें ---
+GEMINI_KEY = "AIzaSyCJ9sndNTHRir4nfcUh1Jgp8JV89jxMZQI"      # Google AI Studio से
+DID_API_KEY = "Basic rn3MnAxUQifXv5l_mOtrJ"      # D-ID से ('Basic ' के साथ)
+VAPI_PUBLIC_KEY = "a8f85d48-b1a8-4977-9d3b-2c1aebbb983b" # Vapi.ai से
+VAPI_ASSISTANT_ID = "b7072519-a121-47c9-b7db-3778362fd62d"  # Vapi के 'Relay' की ID
 
-# यहाँ अपनी कॉपी की हुई चाबी को " " के बीच पेस्ट करें
-DID_API_KEY = "Basic Q1BAYR9KDq9ANJBL"
+# --- कॉन्फ़िगरेशन ---
+genai.configure(api_key=GEMINI_KEY)
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
+st.set_page_config(page_title="Jitendra Super-AI", layout="wide")
+st.title("🚀 Jitendra Singh's Super-AI Trading Agent")
+
+# --- फंक्शन: D-ID वीडियो बनाना ---
 def create_ai_video(text):
     url = "https://api.d-id.com/talks"
-    headers = {"Authorization": f"Basic {DID_API_KEY}", "Content-Type": "application/json"}
+    headers = {"Authorization": DID_API_KEY, "Content-Type": "application/json"}
     payload = {
         "script": {
             "type": "text",
@@ -25,30 +36,47 @@ def create_ai_video(text):
 
 def get_video_url(talk_id):
     url = f"https://api.d-id.com/talks/{talk_id}"
-    headers = {"Authorization": f"Basic {DID_API_KEY}"}
+    headers = {"Authorization": DID_API_KEY}
     for _ in range(10):
         res = requests.get(url, headers=headers).json()
         if res.get("result_url"): return res.get("result_url")
         time.sleep(3)
     return None
 
-st.title("🎙️ Jitendra Singh's Digital AI Agent")
+# --- लेआउट ---
+col1, col2 = st.columns([1, 1])
 
-if st.sidebar.button("Morning Briefing 🎙️"):
-    with st.spinner("बॉस, रिपोर्ट तैयार हो रही है..."):
-        data = yf.download("^NSEI", period="1d")
-        # डेटा निकालने का सबसे सुरक्षित तरीका
-        last_price = data['Close'].iloc[-1]
-        if hasattr(last_price, 'iloc'): last_price = last_price.iloc[0]
+with col1:
+    st.header("📸 Visual Chart Analysis")
+    uploaded_file = st.file_uploader("चार्ट का स्क्रीनशॉट यहाँ अपलोड करें", type=['jpg', 'jpeg', 'png'])
+    
+    if uploaded_file:
+        img = Image.open(uploaded_file)
+        st.image(img, caption="आपका चार्ट", use_container_width=True)
         
-        msg = f"नमस्ते जीतेन्द्र बॉस! मार्केट खुल चुका है। निफ्टी अभी {float(last_price):.2f} पर है। आपका दिन शुभ हो।"
-        
-        v_id = create_ai_video(msg)
-        v_url = get_video_url(v_id)
-        if v_url: st.video(v_url)
-        else: st.error("वीडियो बनाने में देरी हो रही है।")
+        if st.button("AI से चार्ट एनालाइज कराएं"):
+            with st.spinner("AI चार्ट देख रहा है..."):
+                prompt = "आप एक प्रो ट्रेडर हैं। इस चार्ट का हिंदी में टेक्निकल एनालिसिस करें। सपोर्ट, रेजिस्टेंस और एंट्री पॉइंट बताएं।"
+                response = vision_model.generate_content([prompt, img])
+                analysis_text = response.text
+                st.success("एनालिसिस तैयार है!")
+                st.write(analysis_text)
+                
+                # एनालिसिस को वीडियो में बदलना
+                if st.button("इसे अवतार से सुनिए 🎙️"):
+                    v_id = create_ai_video(analysis_text[:200]) # छोटा मैसेज ताकि क्रेडिट कम लगें
+                    v_url = get_video_url(v_id)
+                    if v_url: st.video(v_url)
 
-symbol = st.sidebar.text_input("Stock Name", value="RELIANCE.NS")
+with col2:
+    st.header("📞 Live Voice Agent")
+    st.write("बाजार पर चर्चा करने के लिए 'Talk' बटन दबाएं:")
+    # Vapi बटन
+    vapi(public_key=VAPI_PUBLIC_KEY, assistant_id=VAPI_ASSISTANT_ID)
+
+# --- मार्केट डेटा (Sidebar) ---
+st.sidebar.header("Live Tracker")
+symbol = st.sidebar.text_input("Stock Symbol", value="^NSEI")
 if symbol:
-    stock_data = yf.download(symbol, period="5d")
-    st.line_chart(stock_data['Close'])
+    data = yf.download(symbol, period="5d")
+    st.sidebar.line_chart(data['Close'])
