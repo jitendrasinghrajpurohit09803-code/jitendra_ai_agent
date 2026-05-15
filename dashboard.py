@@ -9,8 +9,8 @@ from streamlit_vapi import vapi
 # --- 1. अपनी सभी API Keys यहाँ भरें ---
 GEMINI_KEY = "AIzaSyCJ9sndNTHRir4nfcUh1Jgp8JV89jxMZQI"      # Google AI Studio से
 DID_API_KEY = "Basic rn3MnAxUQifXv5l_mOtrJ"      # D-ID से ('Basic ' के साथ)
-VAPI_PUBLIC_KEY = "a8f85d48-b1a8-4977-9d3b-2c1aebbb983b" # Vapi.ai से
-VAPI_ASSISTANT_ID = "b7072519-a121-47c9-b7db-3778362fd62d"  # Vapi के 'Relay' की ID
+VAPI_PUBLIC_KEY = "f..." # Vapi.ai से
+VAPI_ASSISTANT_ID = "f.."  # Vapi के 'Relay' की ID
 
 # --- कॉन्फ़िगरेशन ---
 genai.configure(api_key=GEMINI_KEY)
